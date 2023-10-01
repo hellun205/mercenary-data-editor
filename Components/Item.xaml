@@ -1,0 +1,16 @@
+﻿<UserControl x:Class="mercenary_data_editor.Components.Item"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:mercenary_data_editor.Components"
+             mc:Ignorable="d"
+             d:DesignHeight="300" d:DesignWidth="300">
+    <Grid>
+        <TextBlock Text="아이템 이름" Margin="10,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <ComboBox Margin="80,10,10,0" VerticalAlignment="Top" SelectedItem="{Binding itemType}" ItemsSource="{Binding itemTypes}" />
+        <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Margin="10,40,0,0" Content="Add Tier" Click="Add_OnClick" />
+        <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Margin="115,40,0,0" Content="Remove Tier" Click="Remove_OnClick" />
+        <TabControl x:Name="c_tab" Margin="10,65,10,10"></TabControl>
+    </Grid>
+</UserControl>

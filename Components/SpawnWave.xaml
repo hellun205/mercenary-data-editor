@@ -1,0 +1,39 @@
+﻿<UserControl x:Class="mercenary_data_editor.Components.SpawnWave"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:mercenary_data_editor.Components"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800" d:Background="White">
+  <Grid>
+    <Button Content="Add" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top" Height="20" Width="100" Click="Add_OnClick" />
+    <Button Content="Remove" HorizontalAlignment="Left" Margin="105,0,0,0" VerticalAlignment="Top" Height="20" Width="100" Click="Remove_OnClick" />
+    <ListView x:Name="c_list" Margin="0,25,0,0" ItemsSource="{Binding enemies}" d:ItemsSource="{d:SampleData ItemCount=5}" SelectionMode="Single">
+      <ListView.View>
+        <GridView>
+          <GridViewColumn Header="소환 적" Width="150">
+            <GridViewColumn.CellTemplate>
+              <DataTemplate>
+                <ComboBox
+                  Width="138"
+                  IsEditable="True"
+                  ItemsSource="{Binding Path=DataContext.types, Mode=OneWay, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}}"  
+                  SelectedValue="{Binding name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                </ComboBox>
+              </DataTemplate>
+            </GridViewColumn.CellTemplate>
+          </GridViewColumn>
+          <GridViewColumn Header="개수" Width="100">
+            <GridViewColumn.CellTemplate>
+              <DataTemplate>
+                <TextBox Width="88" Text="{Binding count, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+              </DataTemplate>
+            </GridViewColumn.CellTemplate>
+          </GridViewColumn>
+        </GridView>
+      </ListView.View>
+    </ListView>
+
+  </Grid>
+</UserControl>
