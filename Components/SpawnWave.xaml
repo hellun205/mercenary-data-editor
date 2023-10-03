@@ -31,6 +31,27 @@
               </DataTemplate>
             </GridViewColumn.CellTemplate>
           </GridViewColumn>
+          <GridViewColumn Header="동시 소환 개수" Width="100">
+            <GridViewColumn.CellTemplate>
+              <DataTemplate>
+                <TextBox Width="88" Text="{Binding simultaneousSpawnCount, Mode=TwoWay}" />
+              </DataTemplate>
+            </GridViewColumn.CellTemplate>
+          </GridViewColumn>
+          <GridViewColumn Header="스폰 시간" Width="100">
+            <GridViewColumn.CellTemplate>
+              <DataTemplate>
+                <TextBox Width="88" Text="{Binding delay, Mode=TwoWay}" />
+              </DataTemplate>
+            </GridViewColumn.CellTemplate>
+          </GridViewColumn>
+          <GridViewColumn Header="동시 스폰 범위" Width="100">
+            <GridViewColumn.CellTemplate>
+              <DataTemplate>
+                <TextBox Width="88" Text="{Binding range, Mode=TwoWay}" />
+              </DataTemplate>
+            </GridViewColumn.CellTemplate>
+          </GridViewColumn>
         </GridView>
       </ListView.View>
     </ListView>

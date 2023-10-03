@@ -136,7 +136,12 @@ namespace mercenary_data_editor
 
         foreach (var sd in spawnData.spawns)
         {
-          CreateSpawnData(sd.spawns.Select(x => new Enemy(x.name, x.count)).ToArray());
+          CreateSpawnData
+          (
+            sd.spawns
+             .Select(x => new Enemy(x.name, x.count, x.simultaneousSpawnCount, x.delay, x.range))
+             .ToArray()
+          );
         }
 
         foreach (var wtd in spawnData.waveTime)
@@ -191,7 +196,7 @@ namespace mercenary_data_editor
         {
           CreateItemData
           (
-            item.name.ParseEnum<Items>(),
+            item.name,
             item.tier,
             item.applies.Select(x => (x.type, x.value)).ToArray()
           );
@@ -786,11 +791,12 @@ namespace mercenary_data_editor
 
     public void CreateItemData
     (
-      Items itemName = Items.barbell,
+      string itemName = null,
       int tier = 0,
       (ItemStatusItem status, float value)[] data = null
     )
     {
+      if (string.IsNullOrEmpty(itemName)) itemName = Items.barbell.ToString();
       var item = new TabItem()
       {
         Header = weaponDataTabs.Count

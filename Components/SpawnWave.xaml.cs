@@ -14,33 +14,44 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace mercenary_data_editor.Components {
+namespace mercenary_data_editor.Components
+{
   /// <summary>
   /// Interaction logic for SpawnWave.xaml
   /// </summary>
-  public partial class SpawnWave : UserControl {
+  public partial class SpawnWave : UserControl
+  {
     private SpawnWaveModel _model;
-    public SpawnWaveModel model {
-      get => _model; set {
+
+    public SpawnWaveModel model
+    {
+      get => _model;
+      set
+      {
         _model = value;
         this.DataContext = _model;
       }
     }
 
-    public SpawnWave(List<TabItem> enemies) {
+    public SpawnWave(List<TabItem> enemies)
+    {
       InitializeComponent();
       model = new SpawnWaveModel(enemies);
     }
 
-    private void Add_OnClick(object sender, RoutedEventArgs e) {
-      model.enemies.Add(new Enemy("", 0));
+    private void Add_OnClick(object sender, RoutedEventArgs e)
+    {
+      model.enemies.Add(new Enemy("", 0, 1, 0, 10f));
     }
 
-    private void Remove_OnClick(object sender, RoutedEventArgs e) {
-      try {
+    private void Remove_OnClick(object sender, RoutedEventArgs e)
+    {
+      try
+      {
         model.enemies.RemoveAt(c_list.SelectedIndex);
       }
-      catch {
+      catch
+      {
       }
     }
   }

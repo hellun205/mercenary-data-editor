@@ -12,13 +12,13 @@ public partial class Item : UserControl
 
   public TabItem tabItem { get; }
 
-  public Item(TabItem tabItem, Items item = Items.barbell)
+  public Item(TabItem tabItem, string item)
   {
     InitializeComponent();
     model = new ItemModel();
     this.tabItem = tabItem;
     model.onItemTypeChanged += s => this.tabItem.Header = s;
-    model.itemType = item.ToString();
+    model.itemType = item;
 
     this.DataContext = model;
   }

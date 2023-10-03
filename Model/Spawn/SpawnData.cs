@@ -49,6 +49,9 @@ namespace mercenary_data_editor
       {
         public string name;
         public int count;
+        public int simultaneousSpawnCount;
+        public float delay;
+        public float range;
       }
 
       public Spawn[] spawns;
