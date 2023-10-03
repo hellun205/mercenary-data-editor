@@ -293,7 +293,14 @@ namespace mercenary_data_editor
           var sd = (SpawnWave) tabItem.Content;
           spawnData.Add(new SpawnData.Spawns()
           {
-            spawns = sd.model.enemies.Select(x => new SpawnData.Spawns.Spawn() { count = x.count, name = x.name })
+            spawns = sd.model.enemies.Select(x => new SpawnData.Spawns.Spawn()
+              {
+                count = x.count,
+                name = x.name, 
+                simultaneousSpawnCount = x.simultaneousSpawnCount,
+                delay = x.delay,
+                range = x.range
+              })
              .ToArray()
           });
         }
