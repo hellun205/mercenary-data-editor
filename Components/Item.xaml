@@ -8,9 +8,34 @@
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid>
         <TextBlock Text="아이템 이름" Margin="10,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <ComboBox Margin="80,10,10,0" VerticalAlignment="Top" SelectedItem="{Binding itemType}" ItemsSource="{Binding itemTypes}" />
-        <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Margin="10,40,0,0" Content="Add Tier" Click="Add_OnClick" />
-        <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Margin="115,40,0,0" Content="Remove Tier" Click="Remove_OnClick" />
-        <TabControl x:Name="c_tab" Margin="10,65,10,10"></TabControl>
+        <ComboBox Margin="80,10,80,0" VerticalAlignment="Top" Text="{Binding itemType, Mode=TwoWay}" ItemsSource="{Binding itemTypes}" IsEditable="True" />
+        <TextBlock Text="티어" Margin="10,10,50,0" HorizontalAlignment="Right" VerticalAlignment="Top" />
+        <TextBox Margin="0,10,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="30" Text="{Binding tier, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Margin="10,40,0,0" Content="Add Status" Click="Add_OnClick" />
+        <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Margin="115,40,0,0" Content="Remove Status" Click="Remove_OnClick"  />
+        <ListView x:Name="c_list" ItemsSource="{Binding list}" Margin="10,65,10,10">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="스테이터스" Width="250" >
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <ComboBox
+                                    Width="238"
+                                    ItemsSource="{Binding Path=DataContext.statusTypes, Mode=OneWay, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}}"  
+                                    SelectedValue="{Binding status, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                </ComboBox>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="값" Width="200">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding value, Mode=TwoWay}" Width="188" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                </GridView>
+            </ListView.View>
+        </ListView>
     </Grid>
 </UserControl>

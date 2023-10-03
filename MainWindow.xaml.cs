@@ -192,7 +192,8 @@ namespace mercenary_data_editor
           CreateItemData
           (
             item.name.ParseEnum<Items>(),
-            item.tiers.Select(x => x.status.Select(y => (y.type, y.value)).ToArray()).ToArray()
+            item.tier,
+            item.applies.Select(x => (x.type, x.value)).ToArray()
           );
         }
 
@@ -389,25 +390,15 @@ namespace mercenary_data_editor
         }
 
         // Item
-        var resItemData = new Dictionary<string, Dictionary<int, Dictionary<ItemStatusItem, float>>>();
+        var resItemData = new Dictionary<string, (int tier, Dictionary<ItemStatusItem, float> apply)>();
 
         foreach (var itemTab in itemDataTabs.Select(x => (Item) x.Content))
         {
           var name = itemTab.model.itemType;
+          var tier = itemTab.model.tier;
 
-          var dict = itemTab.c_tab.Items
-           .Cast<TabItem>()
-           .ToDictionary
-            (
-              x => Convert.ToInt32(x.Header),
-              x => ((Item2) x.Content).model.list.ToDictionary
-              (
-                y => y.status.ParseEnum<ItemStatusItem>(),
-                y => y.value
-              )
-            );
-
-          resItemData.Add(name, dict);
+          var dict = itemTab.model.list.ToDictionary(x => x.status.ParseEnum<ItemStatusItem>(), x => x.value);
+          resItemData.Add(name, (tier, dict));
         }
 
         using (StreamWriter sw = new StreamWriter($"{c_path.Text}\\Data\\ItemData.json"))
@@ -796,7 +787,8 @@ namespace mercenary_data_editor
     public void CreateItemData
     (
       Items itemName = Items.barbell,
-      (ItemStatusItem status, float value)[][] data = null
+      int tier = 0,
+      (ItemStatusItem status, float value)[] data = null
     )
     {
       var item = new TabItem()
@@ -809,8 +801,11 @@ namespace mercenary_data_editor
       };
 
       if (data != null)
+      {
+        wd.model.tier = tier;
         foreach (var x in data)
-          wd.AddItem(x);
+          wd.AddItem(x.status.ToString(), x.value);
+      }
 
       item.Content = wd;
 

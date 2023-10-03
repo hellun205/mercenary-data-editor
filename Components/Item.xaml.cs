@@ -23,61 +23,20 @@ public partial class Item : UserControl
     this.DataContext = model;
   }
 
-  public void AddItem((ItemStatusItem status, float value)[] data = null)
+  public void AddItem(string type, float value)
   {
-    var item = new TabItem()
-    {
-      Header = c_tab.Items.Count
-    };
-    var child = new Item2()
-    {
-      Margin = new Thickness(0, 0, 0, 0),
-    };
-
-    if (data != null)
-    {
-      foreach (var (status, value) in data)
-      {
-        child.model.list.Add(new ItemModelData()
-        {
-          status = status.ToString(),
-          value = value
-        });
-      }
-    }
-    else if (c_tab.Items.Count > 0)
-    {
-      foreach (var x in ((Item2) ((TabItem) c_tab.Items[^1]).Content).model.list)
-      {
-        child.model.list.Add(new ItemModelData()
-        {
-          status = x.status,
-          value = x.value
-        });
-      }
-    }
-
-    item.Content = child;
-    c_tab.Items.Add(item);
-    item.Focus();
+    model.list.Add(new ItemModelData() { status = type, value = value });
   }
-
+  
   private void Add_OnClick(object sender, RoutedEventArgs e)
   {
-    AddItem();
+    AddItem(ItemStatusItem.Hp.ToString(), 0);
   }
 
   private void Remove_OnClick(object sender, RoutedEventArgs e)
   {
-    if (c_tab.SelectedIndex == -1) return;
-
-    for (var i = c_tab.SelectedIndex + 1; i < c_tab.Items.Count; i++)
-    {
-      var t = ((TabItem) c_tab.Items[i]);
-      t.Header = Convert.ToInt32(t.Header) - 1;
-    }
-
-    c_tab.Items.RemoveAt(c_tab.SelectedIndex);
+    if (c_list.SelectedIndex == -1) return;
+    model.list.RemoveAt(c_list.SelectedIndex);
   }
 }
 

@@ -37,11 +37,10 @@ public class ItemModel
       onItemTypeChanged?.Invoke(value);
     }
   }
-}
-
-public class ItemModel2
-{
+  
   public IList<string> statusTypes => Utility.GetEnumNames<ItemStatusItem>();
 
   public ObservableCollection<ItemModelData> list { get; set; } = new();
+  
+  public int tier { get; set; }
 }
