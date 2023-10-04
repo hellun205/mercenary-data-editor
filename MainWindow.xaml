@@ -5,35 +5,35 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:mercenary_data_editor" xmlns:components="clr-namespace:mercenary_data_editor.Components"
         mc:Ignorable="d"
-        Title="mercenary data editor - v.0.4.0-alpha" Height="600" Width="800"
+        Title="mercenary data editor - v.0.4.0-alpha" Height="600" Width="1000"
         Loaded="Window_Loaded">
   <Grid>
-    <TextBlock Margin="5,5,5,5">path</TextBlock>
-    <TextBox x:Name="c_path" Margin="40,5,60,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Height="20"/>
-    <Button HorizontalAlignment="Right" VerticalAlignment="Top" Width="50" Height="20" Margin="5,5,5,5" Click="Load_OnClick" >Load</Button>
+    <TextBlock Margin="5,5,5,5">경로</TextBlock>
+    <TextBox x:Name="c_path" Margin="40,5,110,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Height="20"/>
+    <Button HorizontalAlignment="Right" VerticalAlignment="Top" Width="100" Height="20" Margin="5,5,5,5" Click="Load_OnClick" >데이터 로드</Button>
     <TabControl x:Name="c_mainTabControl" Margin="5, 30, 5, 35">
-      <TabItem Header="Weapon Attribute Chemistry">
+      <TabItem Header="무기 속성">
         <Grid Background="#FFE5E5E5">
           <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="120" Height="20" Click="AttributeChemistry_Add_OnClick">Add Chemistry</Button>
           <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="120" Height="20" Margin="125,0,0,0" Click="AttributeChemistry_Remove_OnClick">Remove Chemistry</Button>
           <TabControl x:Name="c_attribute_tab" Margin="0,25,0,0"></TabControl>
         </Grid>
       </TabItem>
-      <TabItem Header="Enemy Data" Height="20" VerticalAlignment="Top">
+      <TabItem Header="적 몬스터" Height="20" VerticalAlignment="Top">
         <Grid Background="#FFE5E5E5">
           <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Click="AddEnemyData_OnClick" Content="Add Enemy" />
           <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Margin="105,0,0,0" Click="RemoveEnemyData_OnClick" Content="Remove Enemy" />
           <TabControl x:Name="c_enemyData_tab" Margin="0,25,0,0"></TabControl>
         </Grid>
       </TabItem>
-      <TabItem Header="Spawn Setting">
+      <TabItem Header="소환">
         <Grid Background="#FFE5E5E5">
           <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Click="SpawnSetting_Add_OnClick">Add Wave</Button>
           <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Margin="105,0,0,0" Click="SpawnSetting_Remove_OnClick">Remove Wave</Button>
           <TabControl x:Name="c_spawn_tab" Margin="0,25,0,0"></TabControl>
         </Grid>
       </TabItem>
-      <TabItem Header="Wave Time" >
+      <TabItem Header="웨이브 시간" >
         <Grid Background="#FFE5E5E5">
           <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Click="WaveTime_Add_OnClick" Content="Add Wave" />
           <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Margin="105,0,0,0" Click="WaveTime_Remove_OnClick" Content="Remove Wave" />
@@ -53,28 +53,28 @@
           </ListView>
         </Grid>
       </TabItem>
-      <TabItem Header="Partner">
+      <TabItem Header="용병">
         <Grid Background="#FFE5E5E5">
           <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Click="Partner_Add_OnClick" Content="Add Partner" />
           <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Margin="105,0,0,0" Click="Partner_Remove_OnClick" Content="Remove Partner"/>
           <TabControl x:Name="c_partner_tab" Margin="0,25,0,0"></TabControl>
         </Grid>
       </TabItem>
-      <TabItem Header="Weapons">
+      <TabItem Header="무기">
         <Grid Background="#FFE5E5E5">
           <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Click="Weapon_Add_OnClick" Content="Add Weapon" />
           <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Margin="105,0,0,0" Click="Weapon_Remove_OnClick" Content="Remove Weapon" />
           <TabControl x:Name="c_weapon_tab" Margin="0,25,0,0"></TabControl>
         </Grid>
       </TabItem>
-      <TabItem Header="Items">
+      <TabItem Header="아이템">
         <Grid Background="#FFE5E5E5">
           <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Click="Item_Add_OnClick" Content="Add Item" />
           <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Margin="105,0,0,0" Click="Item_Remove_OnClick" Content="Remove Item" />
           <TabControl x:Name="c_items_tab" Margin="0,25,0,0"></TabControl>
         </Grid>
       </TabItem>
-      <TabItem Header="Player">
+      <TabItem Header="플레이어 기본 능력치">
         <Grid Background="#FFE5E5E5">
           <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Margin="0,0,0,0" Content="Add Status" Click="PlayerStatus_Add_OnClick"  />
           <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Margin="105,0,0,0" Content="Remove Status" Click="PlayerStatus_Remove_OnClick"  />
@@ -104,9 +104,25 @@
           </ListView>
         </Grid>
       </TabItem>
+      
+      <TabItem Header="상점 새로고침 가격">
+        <Grid>
+          <components:RefreshPrice x:Name="c_refreshPrice" />
+        </Grid>
+      </TabItem>
+      <TabItem Header="무기/아이템 티어 확률">
+        <Grid>
+          <components:TierProbabilities x:Name="c_storeProbability" />
+        </Grid>
+      </TabItem>
+      <TabItem Header="웨이브 당 증가 확률(무기/아이템)">
+        <Grid>
+          <components:TierProbabilities x:Name="c_waveProbability" />
+        </Grid>
+      </TabItem>
     </TabControl>
     <Button HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="100" Height="25" Margin="0,0,110,5" Click="OpenJson" Content="Open Json" />
-    <Button HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="100" Height="25" Margin="0,0,5,5" Click="Save_OnClick" Content="Save" />
+    <Button HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="100" Height="25" Margin="0,0,5,5" Click="Save_OnClick" Content="저장" />
 
   </Grid>
 </Window>

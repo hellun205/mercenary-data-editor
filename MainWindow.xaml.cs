@@ -13,6 +13,7 @@ using mercenary_data_editor.Model;
 using mercenary_data_editor.Model.Item;
 using mercenary_data_editor.Model.Partner;
 using mercenary_data_editor.Model.Player;
+using mercenary_data_editor.Model.Store;
 using mercenary_data_editor.Model.Weapon;
 
 namespace mercenary_data_editor
@@ -51,13 +52,14 @@ namespace mercenary_data_editor
     {
       var select = c_mainTabControl.SelectedIndex switch
       {
-        0           => "AttributeChemistryData",
+        0 => "AttributeChemistryData",
         1 or 2 or 3 => "SpawnData",
-        4           => "PartnerData",
-        5           => "WeaponData",
-        6           => "ItemData",
-        7           => "PlayerData",
-        _           => throw new ArgumentOutOfRangeException()
+        4 => "PartnerData",
+        5 => "WeaponData",
+        6 => "ItemData",
+        7 => "PlayerData",
+        8 or 9 or 10 => "StoreData",
+        _ => throw new ArgumentOutOfRangeException()
       };
       Process.Start(new ProcessStartInfo($@"{c_path.Text}\Data\{select}.json")
       {
@@ -66,6 +68,18 @@ namespace mercenary_data_editor
     }
 
     #region Core
+
+    private T LoadJson<T>(string fileName)
+    {
+      using var sr = new StreamReader($@"{c_path.Text}\Data\{fileName}.json");
+      return JsonConvert.DeserializeObject<T>(sr.ReadToEnd());
+    }
+
+    private void SaveJson(string fileName, object obj)
+    {
+      using var sw = new StreamWriter($@"{c_path.Text}\Data\{fileName}.json");
+      sw.Write(JsonConvert.SerializeObject(obj, Formatting.Indented));
+    }
 
     private void LoadData()
     {
@@ -76,6 +90,7 @@ namespace mercenary_data_editor
       WeaponData weaponData;
       ItemData itemData;
       PlayerStatusData playerStatusData;
+      StoreData storeData;
 
       try
       {
@@ -88,13 +103,12 @@ namespace mercenary_data_editor
         ClearWeaponData();
         ClearItemData();
         ClearPlayerStatusData();
+        c_refreshPrice.Clear();
+        c_waveProbability.Clear();
+        c_storeProbability.Clear();
 
         // Attribute Chemistry Data
-        using (StreamReader sr = new StreamReader($"{c_path.Text}\\Data\\AttributeChemistryData.json"))
-        {
-          var tmpStr = sr.ReadToEnd();
-          attributeChemistryData = JsonConvert.DeserializeObject<AttributeChemistryData>(tmpStr);
-        }
+        attributeChemistryData = LoadJson<AttributeChemistryData>("AttributeChemistryData");
 
         attributeChemistrySimplyData = attributeChemistryData.ToSimply();
 
@@ -104,11 +118,7 @@ namespace mercenary_data_editor
         }
 
         // Enemy Data / Spawn Data
-        using (StreamReader sr = new StreamReader($"{c_path.Text}\\Data\\SpawnData.json"))
-        {
-          var tmpStr = sr.ReadToEnd();
-          spawnData = JsonConvert.DeserializeObject<SpawnData>(tmpStr);
-        }
+        spawnData = LoadJson<SpawnData>("SpawnData");
 
         foreach (var ed in spawnData.enemyData)
         {
@@ -139,8 +149,8 @@ namespace mercenary_data_editor
           CreateSpawnData
           (
             sd.spawns
-             .Select(x => new Enemy(x.name, x.count, x.simultaneousSpawnCount, x.delay, x.range))
-             .ToArray()
+              .Select(x => new Enemy(x.name, x.count, x.simultaneousSpawnCount, x.delay, x.range))
+              .ToArray()
           );
         }
 
@@ -150,30 +160,22 @@ namespace mercenary_data_editor
         }
 
         // Partner
-        using (StreamReader sr = new StreamReader($"{c_path.Text}\\Data\\PartnerData.json"))
-        {
-          var tmpStr = sr.ReadToEnd();
-          partnerData = JsonConvert.DeserializeObject<PartnerData>(tmpStr);
-        }
+        partnerData = LoadJson<PartnerData>("PartnerData");
 
         foreach (var partner in partnerData.data)
-          foreach (var status in partner.status)
-            foreach (var applyStatus in status.applyStatus)
-              foreach (var value in applyStatus.status)
-                CreatePartnerData(partner.name, partner.status.Select(x => new PartnerStatusData()
-                {
-                  attribute = status.attribute.ToString(),
-                  tier = applyStatus.tier,
-                  status = value.type.ToString(),
-                  value = value.value
-                }).ToArray());
+        foreach (var status in partner.status)
+        foreach (var applyStatus in status.applyStatus)
+        foreach (var value in applyStatus.status)
+          CreatePartnerData(partner.name, partner.status.Select(x => new PartnerStatusData()
+          {
+            attribute = status.attribute.ToString(),
+            tier = applyStatus.tier,
+            status = value.type.ToString(),
+            value = value.value
+          }).ToArray());
 
         // Weapons
-        using (StreamReader sr = new StreamReader($"{c_path.Text}\\Data\\WeaponData.json"))
-        {
-          var tmpStr = sr.ReadToEnd();
-          weaponData = JsonConvert.DeserializeObject<WeaponData>(tmpStr);
-        }
+        weaponData = LoadJson<WeaponData>("WeaponData");
 
         foreach (var weapon in weaponData.weapons)
         {
@@ -186,11 +188,7 @@ namespace mercenary_data_editor
         }
 
         // Items
-        using (StreamReader sr = new StreamReader($"{c_path.Text}\\Data\\ItemData.json"))
-        {
-          var tmpStr = sr.ReadToEnd();
-          itemData = JsonConvert.DeserializeObject<ItemData>(tmpStr);
-        }
+        itemData = LoadJson<ItemData>("ItemData");
 
         foreach (var item in itemData.items)
         {
@@ -203,16 +201,21 @@ namespace mercenary_data_editor
         }
 
         // Player Status
-        using (StreamReader sr = new StreamReader($"{c_path.Text}\\Data\\PlayerData.json"))
-        {
-          var tmpStr = sr.ReadToEnd();
-          playerStatusData = JsonConvert.DeserializeObject<PlayerStatusData>(tmpStr);
-        }
+        playerStatusData = LoadJson<PlayerStatusData>("PlayerData");
 
         foreach (var status in playerStatusData.status)
           CreatePlayerStatusData(status.type, status.value);
 
+        // Store Data
+        storeData = LoadJson<StoreData>("StoreData");
 
+        foreach (var price in storeData.refreshPrices)
+          c_refreshPrice.Add(price);
+        foreach (var probability in storeData.tierProbabilities)
+          c_storeProbability.Add(probability);
+        foreach (var probability in storeData.additionalProbabilitiesOfWaves)
+          c_waveProbability.Add(probability);
+        
         MessageBox.Show("Loading Complete!", "Load", MessageBoxButton.OK, MessageBoxImage.Information);
       }
       catch (Exception ex)
@@ -230,12 +233,12 @@ namespace mercenary_data_editor
 
         foreach (var tabItem in acDataTabs)
         {
-          var acd = (AttributeChemistry) tabItem.Content;
-          var attr = (Attribute) Enum.Parse(typeof(Attribute), acd.c_type.Text);
+          var acd = (AttributeChemistry)tabItem.Content;
+          var attr = (Attribute)Enum.Parse(typeof(Attribute), acd.c_type.Text);
           var value = new Dictionary<int, Dictionary<ApplyStatus, float>>();
           foreach (var a in acd.model.attributes)
           {
-            var type = (ApplyStatus) Enum.Parse(typeof(ApplyStatus), a.type);
+            var type = (ApplyStatus)Enum.Parse(typeof(ApplyStatus), a.type);
 
             if (value.ContainsKey(a.count))
               value[a.count].Add(type, a.amount);
@@ -255,7 +258,7 @@ namespace mercenary_data_editor
 
         foreach (var tabItem in enemyDataTabs)
         {
-          var ed = (EnemyData) tabItem.Content;
+          var ed = (EnemyData)tabItem.Content;
           enemyData.Add(new SpawnData.Enemy()
           {
             name = ed.model.name,
@@ -290,18 +293,18 @@ namespace mercenary_data_editor
 
         foreach (var tabItem in spawnDataTabs)
         {
-          var sd = (SpawnWave) tabItem.Content;
+          var sd = (SpawnWave)tabItem.Content;
           spawnData.Add(new SpawnData.Spawns()
           {
             spawns = sd.model.enemies.Select(x => new SpawnData.Spawns.Spawn()
               {
                 count = x.count,
-                name = x.name, 
+                name = x.name,
                 simultaneousSpawnCount = x.simultaneousSpawnCount,
                 delay = x.delay,
                 range = x.range
               })
-             .ToArray()
+              .ToArray()
           });
         }
 
@@ -310,23 +313,15 @@ namespace mercenary_data_editor
         // Wave Time
         resSpawnData.waveTime = seconds.Select(x => x.second).ToArray();
 
-        using (StreamWriter sw = new StreamWriter($"{c_path.Text}\\Data\\AttributeChemistryData.json"))
-        {
-          sw.Write(JsonConvert.SerializeObject(resACData, Formatting.Indented));
-          sw.Close();
-        }
+        SaveJson("AttributeChemistryData", resACData);
 
-        using (StreamWriter sw = new StreamWriter($"{c_path.Text}\\Data\\SpawnData.json"))
-        {
-          sw.Write(JsonConvert.SerializeObject(resSpawnData, Formatting.Indented));
-          sw.Close();
-        }
+        SaveJson("SpawnData", resSpawnData);
 
         // Partner
         var resPartnerSimplyData =
           new Dictionary<string, Dictionary<Attribute, Dictionary<int, (PartnerData.Status status, string value)[]>>>();
 
-        foreach (var model in partnerDataTabs.Select(x => ((Partner) x.Content).model))
+        foreach (var model in partnerDataTabs.Select(x => ((Partner)x.Content).model))
         {
           var pFirst = new Dictionary<Attribute, Dictionary<int, List<(PartnerData.Status status, string value)>>>();
 
@@ -362,17 +357,13 @@ namespace mercenary_data_editor
           }
         }
 
-        using (StreamWriter sw = new StreamWriter($"{c_path.Text}\\Data\\PartnerData.json"))
-        {
-          sw.Write(JsonConvert.SerializeObject(new PartnerData().Parse(resPartnerSimplyData), Formatting.Indented));
-          sw.Close();
-        }
+        SaveJson("PartnerData", new PartnerData().Parse(resPartnerSimplyData));
 
         // Weapon
         var resWeaponData =
           new Dictionary<string, (Attribute attribute, Dictionary<int, Dictionary<WeaponStatusItem, float>> tiers)>();
 
-        foreach (var weaponTab in weaponDataTabs.Select(x => (Weapon) x.Content))
+        foreach (var weaponTab in weaponDataTabs.Select(x => (Weapon)x.Content))
         {
           var name = weaponTab.model.weaponType;
           Attribute attr = 0;
@@ -381,11 +372,11 @@ namespace mercenary_data_editor
             attr |= a;
 
           var dict = weaponTab.c_tab.Items
-           .Cast<TabItem>()
-           .ToDictionary
+            .Cast<TabItem>()
+            .ToDictionary
             (
               x => Convert.ToInt32(x.Header),
-              x => ((Weapon2) x.Content).model.list.ToDictionary
+              x => ((Weapon2)x.Content).model.list.ToDictionary
               (
                 y => y.status.ParseEnum<WeaponStatusItem>(),
                 y => y.value
@@ -395,16 +386,12 @@ namespace mercenary_data_editor
           resWeaponData.Add(name, (attr, dict));
         }
 
-        using (StreamWriter sw = new StreamWriter($"{c_path.Text}\\Data\\WeaponData.json"))
-        {
-          sw.Write(JsonConvert.SerializeObject(new WeaponData().Parse(resWeaponData), Formatting.Indented));
-          sw.Close();
-        }
+        SaveJson("WeaponData", new WeaponData().Parse(resWeaponData));
 
         // Item
         var resItemData = new Dictionary<string, (int tier, Dictionary<ItemStatusItem, float> apply)>();
 
-        foreach (var itemTab in itemDataTabs.Select(x => (Item) x.Content))
+        foreach (var itemTab in itemDataTabs.Select(x => (Item)x.Content))
         {
           var name = itemTab.model.itemType;
           var tier = itemTab.model.tier;
@@ -413,11 +400,7 @@ namespace mercenary_data_editor
           resItemData.Add(name, (tier, dict));
         }
 
-        using (StreamWriter sw = new StreamWriter($"{c_path.Text}\\Data\\ItemData.json"))
-        {
-          sw.Write(JsonConvert.SerializeObject(new ItemData().Parse(resItemData), Formatting.Indented));
-          sw.Close();
-        }
+        SaveJson("ItemData", new ItemData().Parse(resItemData));
 
         // Player Status
         var resPlayerStatusData = new Dictionary<PlayerStatusItem, float>();
@@ -425,11 +408,19 @@ namespace mercenary_data_editor
         foreach (var status in playerStatus)
           resPlayerStatusData.Add(status.status.ParseEnum<PlayerStatusItem>(), status.value);
 
-        using (StreamWriter sw = new StreamWriter($"{c_path.Text}\\Data\\PlayerData.json"))
+        SaveJson("PlayerData", new PlayerStatusData().Parse(resPlayerStatusData));
+
+        // Store
+        var resRefreshPrices = c_refreshPrice.model.prices.Select(x => x.price).ToArray();
+        var resTierProbabilities = c_storeProbability.model.probabilities.Select(x => x.probability).ToArray();
+        var resWaveProbabilities = c_waveProbability.model.probabilities.Select(x => x.probability).ToArray();
+        
+        SaveJson("StoreData", new StoreData
         {
-          sw.Write(JsonConvert.SerializeObject(new PlayerStatusData().Parse(resPlayerStatusData), Formatting.Indented));
-          sw.Close();
-        }
+          refreshPrices = resRefreshPrices,
+          tierProbabilities = resTierProbabilities,
+          additionalProbabilitiesOfWaves = resWaveProbabilities
+        });
 
         MessageBox.Show("Save Complete!", "Save", MessageBoxButton.OK, MessageBoxImage.Information);
       }
@@ -444,7 +435,7 @@ namespace mercenary_data_editor
     #region Attribute Chemistry
 
     private void CreateACData(Attribute defaultAttribute = default,
-                              Dictionary<int, Dictionary<ApplyStatus, float>> data = null)
+      Dictionary<int, Dictionary<ApplyStatus, float>> data = null)
     {
       var item = new TabItem()
       {
@@ -484,6 +475,7 @@ namespace mercenary_data_editor
       c_attribute_tab.Items.RemoveAt(index);
       acDataTabs.RemoveAt(index);
     }
+
     public void ClearACData()
     {
       c_attribute_tab.Items.Clear();
@@ -605,7 +597,7 @@ namespace mercenary_data_editor
 
       for (var i = index; i < spawnDataTabs.Count; i++)
       {
-        var sw = (SpawnWave) spawnDataTabs[i].Content;
+        var sw = (SpawnWave)spawnDataTabs[i].Content;
         spawnDataTabs[i].Header = Convert.ToInt32(spawnDataTabs[i].Header) - 1;
       }
     }
@@ -687,10 +679,10 @@ namespace mercenary_data_editor
       TabItem item;
       Partner pd;
 
-      if (partnerDataTabs.Any(x => ((Partner) x.Content).model.name == name))
+      if (partnerDataTabs.Any(x => ((Partner)x.Content).model.name == name))
       {
-        item = partnerDataTabs.Single(x => ((Partner) x.Content).model.name == name);
-        pd = (Partner) item.Content;
+        item = partnerDataTabs.Single(x => ((Partner)x.Content).model.name == name);
+        pd = (Partner)item.Content;
       }
       else
       {

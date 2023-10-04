@@ -1,0 +1,27 @@
+<UserControl x:Class="mercenary_data_editor.Components.TierProbabilities"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:mercenary_data_editor.Components"
+             mc:Ignorable="d"
+             d:DesignHeight="300" d:DesignWidth="300">
+    <Grid>
+        <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Click="Add_OnClick" Content="Add Tier" />
+        <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Margin="105,0,0,0" Click="Remove_OnClick" Content="Remove Tier" />
+        <ListView x:Name="c_list" Margin="0,25,0,0" ItemsSource="{Binding probabilities}">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="티어" DisplayMemberBinding="{Binding tier}" Width="50" />
+                    <GridViewColumn Header="확률" Width="200">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding probability, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="188" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                </GridView>
+            </ListView.View>
+        </ListView>
+    </Grid>
+</UserControl>
