@@ -7,9 +7,11 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using mercenary_data_editor.Model;
+using mercenary_data_editor.Model.Consumable;
 using mercenary_data_editor.Model.Item;
 using mercenary_data_editor.Model.Partner;
 using mercenary_data_editor.Model.Player;
@@ -31,6 +33,7 @@ namespace mercenary_data_editor
     private List<TabItem> partnerDataTabs = new();
     private List<TabItem> weaponDataTabs = new();
     private List<TabItem> itemDataTabs = new();
+    private List<TabItem> consumableDataTabs = new();
 
     public MainWindow()
     {
@@ -59,6 +62,7 @@ namespace mercenary_data_editor
         6 => "ItemData",
         7 => "PlayerData",
         8 or 9 or 10 => "StoreData",
+        11 => "ConsumableData",
         _ => throw new ArgumentOutOfRangeException()
       };
       Process.Start(new ProcessStartInfo($@"{c_path.Text}\Data\{select}.json")
@@ -77,90 +81,133 @@ namespace mercenary_data_editor
 
     private void SaveJson(string fileName, object obj)
     {
-      using var sw = new StreamWriter($@"{c_path.Text}\Data\{fileName}.json");
+      var dirPath = $@"{c_path.Text}\Data";
+      var path = $@"{dirPath}\{fileName}.json";
+
+      if (!Directory.Exists(dirPath))
+        Directory.CreateDirectory(dirPath);
+      if (!File.Exists(path))
+      {
+        var s = File.CreateText(path);
+        s.Close();
+      }
+
+      using var sw = new StreamWriter(path);
       sw.Write(JsonConvert.SerializeObject(obj, Formatting.Indented));
     }
 
     private void LoadData()
     {
-      AttributeChemistryData attributeChemistryData;
-      Dictionary<Attribute, Dictionary<int, Dictionary<ApplyStatus, float>>> attributeChemistrySimplyData;
-      SpawnData spawnData;
-      PartnerData partnerData;
-      WeaponData weaponData;
-      ItemData itemData;
-      PlayerStatusData playerStatusData;
-      StoreData storeData;
+      var failedList = new Dictionary<string, string>();
 
+      // Clear Data
+      ClearACData();
+      ClearEnemyData();
+      ClearSpawnData();
+      ClearWaveTimeData();
+      ClearPartnerData();
+      ClearWeaponData();
+      ClearItemData();
+      ClearPlayerStatusData();
+      ClearConsumableData();
+      c_refreshPrice.Clear();
+      c_waveProbability.Clear();
+      c_storeProbability.Clear();
+
+      // Attribute Chemistry Data
       try
       {
-        // Clear Data
-        ClearACData();
-        ClearEnemyData();
-        ClearSpawnData();
-        ClearWaveTimeData();
-        ClearPartnerData();
-        ClearWeaponData();
-        ClearItemData();
-        ClearPlayerStatusData();
-        c_refreshPrice.Clear();
-        c_waveProbability.Clear();
-        c_storeProbability.Clear();
+        var attributeChemistryData = LoadJson<AttributeChemistryData>("AttributeChemistryData");
 
-        // Attribute Chemistry Data
-        attributeChemistryData = LoadJson<AttributeChemistryData>("AttributeChemistryData");
-
-        attributeChemistrySimplyData = attributeChemistryData.ToSimply();
+        var attributeChemistrySimplyData = attributeChemistryData.ToSimply();
 
         foreach (var (attribute, dict) in attributeChemistrySimplyData)
         {
           CreateACData(attribute, dict);
         }
+      }
+      catch (Exception e)
+      {
+        failedList.Add("Attribute Chemistry", e.Message);
+      }
 
-        // Enemy Data / Spawn Data
-        spawnData = LoadJson<SpawnData>("SpawnData");
+      // Enemy Data / Spawn Data / Wave Time
 
-        foreach (var ed in spawnData.enemyData)
+      try
+      {
+        var spawnData = LoadJson<SpawnData>("SpawnData");
+
+        try
         {
-          CreateEnemyData
-          (
-            ed.name,
+          foreach (var ed in spawnData.enemyData)
+          {
+            CreateEnemyData
             (
-              ed.defaultStatus.hp,
-              ed.defaultStatus.damage,
-              ed.defaultStatus.moveSpeed,
-              ed.defaultStatus.dropCoin
-            ),
+              ed.name,
+              (
+                ed.defaultStatus.hp,
+                ed.defaultStatus.damage,
+                ed.defaultStatus.moveSpeed,
+                ed.defaultStatus.dropCoin
+              ),
+              (
+                ed.increaseStatus.hp,
+                ed.increaseStatus.damage,
+                ed.increaseStatus.moveSpeed,
+                ed.increaseStatus.dropCoin
+              ),
+              ed.detailStatus.Select(x => new EnemyDetailStatus()
+              {
+                status = x.status.ToString(), value = x.value
+              }).ToArray()
+            );
+          }
+        }
+        catch (Exception e)
+        {
+          failedList.Add("Enemy", e.Message);
+        }
+
+        try
+        {
+          foreach (var sd in spawnData.spawns)
+          {
+            CreateSpawnData
             (
-              ed.increaseStatus.hp,
-              ed.increaseStatus.damage,
-              ed.increaseStatus.moveSpeed,
-              ed.increaseStatus.dropCoin
-            ),
-            ed.detailStatus.Select(x => new EnemyDetailStatus()
-            {
-              status = x.status.ToString(), value = x.value
-            }).ToArray()
-          );
+              sd.spawns
+                .Select(x => new Enemy(x.name, x.count, x.simultaneousSpawnCount, x.delay, x.range))
+                .ToArray()
+            );
+          }
         }
-
-        foreach (var sd in spawnData.spawns)
+        catch (Exception e)
         {
-          CreateSpawnData
-          (
-            sd.spawns
-              .Select(x => new Enemy(x.name, x.count, x.simultaneousSpawnCount, x.delay, x.range))
-              .ToArray()
-          );
+          failedList.Add("Spawn", e.Message);
         }
 
-        foreach (var wtd in spawnData.waveTime)
+        try
         {
-          CreateWaveTimeData(wtd);
+          foreach (var wtd in spawnData.waveTime)
+          {
+            CreateWaveTimeData(wtd);
+          }
         }
+        catch (Exception e)
+        {
+          failedList.Add("Wave Time", e.Message);
+        }
+      }
+      catch (Exception e)
+      {
+        failedList.Add("Enemy", e.Message);
+        failedList.Add("Spawn", e.Message);
+        failedList.Add("Wave Time", e.Message);
+      }
 
-        // Partner
-        partnerData = LoadJson<PartnerData>("PartnerData");
+      // Partner
+      try
+      {
+        var partnerData = LoadJson<PartnerData>("PartnerData");
 
         foreach (var partner in partnerData.data)
         foreach (var status in partner.status)
@@ -173,9 +220,16 @@ namespace mercenary_data_editor
             status = value.type.ToString(),
             value = value.value
           }).ToArray());
+      }
+      catch (Exception e)
+      {
+        failedList.Add("Partner", e.Message);
+      }
 
-        // Weapons
-        weaponData = LoadJson<WeaponData>("WeaponData");
+      // Weapons
+      try
+      {
+        var weaponData = LoadJson<WeaponData>("WeaponData");
 
         foreach (var weapon in weaponData.weapons)
         {
@@ -186,9 +240,16 @@ namespace mercenary_data_editor
             weapon.tiers.Select(x => x.status.Select(y => (y.type, y.value)).ToArray()).ToArray()
           );
         }
+      }
+      catch (Exception e)
+      {
+        failedList.Add("Weapon", e.Message);
+      }
 
-        // Items
-        itemData = LoadJson<ItemData>("ItemData");
+      // Items
+      try
+      {
+        var itemData = LoadJson<ItemData>("ItemData");
 
         foreach (var item in itemData.items)
         {
@@ -199,36 +260,107 @@ namespace mercenary_data_editor
             item.applies.Select(x => (x.type, x.value)).ToArray()
           );
         }
+      }
+      catch (Exception e)
+      {
+        failedList.Add("Item", e.Message);
+      }
 
-        // Player Status
-        playerStatusData = LoadJson<PlayerStatusData>("PlayerData");
+      // Player Status
+      try
+      {
+        var playerStatusData = LoadJson<PlayerStatusData>("PlayerData");
 
         foreach (var status in playerStatusData.status)
           CreatePlayerStatusData(status.type, status.value);
-
-        // Store Data
-        storeData = LoadJson<StoreData>("StoreData");
-
-        foreach (var price in storeData.refreshPrices)
-          c_refreshPrice.Add(price);
-        foreach (var probability in storeData.tierProbabilities)
-          c_storeProbability.Add(probability);
-        foreach (var probability in storeData.additionalProbabilitiesOfWaves)
-          c_waveProbability.Add(probability);
-        
-        MessageBox.Show("Loading Complete!", "Load", MessageBoxButton.OK, MessageBoxImage.Information);
       }
-      catch (Exception ex)
+      catch (Exception e)
       {
-        MessageBox.Show($"Load Failed.\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        failedList.Add("Player Status", e.Message);
       }
+
+      // Store Data
+      try
+      {
+        var storeData = LoadJson<StoreData>("StoreData");
+        try
+        {
+          foreach (var price in storeData.refreshPrices)
+            c_refreshPrice.Add(price);
+        }
+        catch (Exception e)
+        {
+          failedList.Add("Refresh Price", e.Message);
+        }
+
+        try
+        {
+          foreach (var probability in storeData.tierProbabilities)
+            c_storeProbability.Add(probability);
+        }
+        catch (Exception e)
+        {
+          failedList.Add("Probability of Tier", e.Message);
+        }
+
+        try
+        {
+          foreach (var probability in storeData.additionalProbabilitiesOfWaves)
+            c_waveProbability.Add(probability);
+        }
+        catch (Exception e)
+        {
+          failedList.Add("Additional Probability by Wave", e.Message);
+        }
+      }
+      catch (Exception e)
+      {
+        failedList.Add("Refresh Price", e.Message);
+        failedList.Add("Probability of Tier", e.Message);
+        failedList.Add("Additional Probability by Wave", e.Message);
+      }
+
+      // Consumable Data
+      try
+      {
+        var consumableData = LoadJson<ConsumableData>("ConsumableData");
+
+        foreach (var consumable in consumableData.consumables)
+          CreateConsumableData(consumable.name, consumable.useStatus.Select(x => (x.type, x.value)).ToArray());
+      }
+      catch (Exception e)
+      {
+        failedList.Add("Consumable Item", e.Message);
+      }
+
+      var sb = new StringBuilder();
+      var hasError = failedList.Any();
+
+      if (hasError)
+      {
+        sb.Append("Loading Complete with error\n\n");
+        foreach (var (section, message) in failedList)
+          sb.Append($"{section} : {message}\n");
+      }
+      else
+        sb.Append("Loading Complete");
+
+      MessageBox.Show
+      (
+        sb.ToString(),
+        "Loading Data",
+        MessageBoxButton.OK,
+        hasError ? MessageBoxImage.Warning : MessageBoxImage.Information
+      );
     }
 
     private void SaveData()
     {
+      var failedList = new Dictionary<string, string>();
+
+      // Weapon Attribute Chemistry Data
       try
       {
-        // Weapon Attribute Chemistry Data
         var resACSimplyData = new Dictionary<Attribute, Dictionary<int, Dictionary<ApplyStatus, float>>>();
 
         foreach (var tabItem in acDataTabs)
@@ -250,10 +382,18 @@ namespace mercenary_data_editor
             throw new Exception("attribute type is must be single element.");
         }
 
-        var resACData = new AttributeChemistryData().Parse(resACSimplyData);
+        SaveJson("AttributeChemistryData", new AttributeChemistryData().Parse(resACSimplyData));
+      }
+      catch (Exception e)
+      {
+        failedList.Add("Attribute Chemistry", e.Message);
+      }
 
-        // Enemy Data
-        var resSpawnData = new SpawnData();
+      // Enemy Data
+      var resSpawnData = new SpawnData();
+
+      try
+      {
         var enemyData = new List<SpawnData.Enemy>();
 
         foreach (var tabItem in enemyDataTabs)
@@ -287,8 +427,15 @@ namespace mercenary_data_editor
         }
 
         resSpawnData.enemyData = enemyData.ToArray();
+      }
+      catch (Exception e)
+      {
+        failedList.Add("Enemy", e.Message);
+      }
 
-        // Spawn Data
+      // Spawn Data
+      try
+      {
         var spawnData = new List<SpawnData.Spawns>();
 
         foreach (var tabItem in spawnDataTabs)
@@ -309,17 +456,37 @@ namespace mercenary_data_editor
         }
 
         resSpawnData.spawns = spawnData.ToArray();
+      }
+      catch (Exception e)
+      {
+        failedList.Add("Spawn", e.Message);
+      }
 
-        // Wave Time
+      // Wave Time
+      try
+      {
         resSpawnData.waveTime = seconds.Select(x => x.second).ToArray();
+      }
+      catch (Exception e)
+      {
+        failedList.Add("Wave Time", e.Message);
+      }
 
-        SaveJson("AttributeChemistryData", resACData);
-
+      try
+      {
         SaveJson("SpawnData", resSpawnData);
+      }
+      catch (Exception e)
+      {
+        failedList.Add("Enemy, Spawn, Wave Time", e.Message);
+      }
 
-        // Partner
+      // Partner
+      try
+      {
         var resPartnerSimplyData =
-          new Dictionary<string, Dictionary<Attribute, Dictionary<int, (PartnerData.Status status, string value)[]>>>();
+          new Dictionary<string,
+            Dictionary<Attribute, Dictionary<int, (PartnerData.Status status, string value)[]>>>();
 
         foreach (var model in partnerDataTabs.Select(x => ((Partner)x.Content).model))
         {
@@ -358,8 +525,15 @@ namespace mercenary_data_editor
         }
 
         SaveJson("PartnerData", new PartnerData().Parse(resPartnerSimplyData));
+      }
+      catch (Exception e)
+      {
+        failedList.Add("Partner", e.Message);
+      }
 
-        // Weapon
+      // Weapon
+      try
+      {
         var resWeaponData =
           new Dictionary<string, (Attribute attribute, Dictionary<int, Dictionary<WeaponStatusItem, float>> tiers)>();
 
@@ -387,8 +561,15 @@ namespace mercenary_data_editor
         }
 
         SaveJson("WeaponData", new WeaponData().Parse(resWeaponData));
+      }
+      catch (Exception e)
+      {
+        failedList.Add("Weapon", e.Message);
+      }
 
-        // Item
+      // Item
+      try
+      {
         var resItemData = new Dictionary<string, (int tier, Dictionary<ItemStatusItem, float> apply)>();
 
         foreach (var itemTab in itemDataTabs.Select(x => (Item)x.Content))
@@ -401,8 +582,15 @@ namespace mercenary_data_editor
         }
 
         SaveJson("ItemData", new ItemData().Parse(resItemData));
+      }
+      catch (Exception e)
+      {
+        failedList.Add("Item", e.Message);
+      }
 
-        // Player Status
+      // Player Status
+      try
+      {
         var resPlayerStatusData = new Dictionary<PlayerStatusItem, float>();
 
         foreach (var status in playerStatus)
@@ -414,20 +602,59 @@ namespace mercenary_data_editor
         var resRefreshPrices = c_refreshPrice.model.prices.Select(x => x.price).ToArray();
         var resTierProbabilities = c_storeProbability.model.probabilities.Select(x => x.probability).ToArray();
         var resWaveProbabilities = c_waveProbability.model.probabilities.Select(x => x.probability).ToArray();
-        
+
         SaveJson("StoreData", new StoreData
         {
           refreshPrices = resRefreshPrices,
           tierProbabilities = resTierProbabilities,
           additionalProbabilitiesOfWaves = resWaveProbabilities
         });
-
-        MessageBox.Show("Save Complete!", "Save", MessageBoxButton.OK, MessageBoxImage.Information);
       }
-      catch (Exception ex)
+      catch (Exception e)
       {
-        MessageBox.Show($"Save Failed.\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        failedList.Add("Store Data", e.Message);
       }
+
+      // Consumable
+      try
+      {
+        var resConsumables = new Dictionary<string, Dictionary<ConsumableApplyStatus, string>>();
+
+        foreach (var model in consumableDataTabs.Select(x => ((Consumable)x.Content).model))
+        {
+          resConsumables.Add(model.itemName, model.list.ToDictionary
+          (
+            x => x.status.ParseEnum<ConsumableApplyStatus>(),
+            x => x.value
+          ));
+        }
+
+        SaveJson("ConsumableData", new ConsumableData().Parse(resConsumables));
+      }
+      catch (Exception e)
+      {
+        failedList.Add("Consumable Item", e.Message);
+      }
+
+      var sb = new StringBuilder();
+      var hasError = failedList.Any();
+
+      if (hasError)
+      {
+        sb.Append("Save Complete with error\n\n");
+        foreach (var (section, message) in failedList)
+          sb.Append($"{section} : {message}\n");
+      }
+      else
+        sb.Append("Save Complete");
+
+      MessageBox.Show
+      (
+        sb.ToString(),
+        "Save Data",
+        MessageBoxButton.OK,
+        hasError ? MessageBoxImage.Warning : MessageBoxImage.Information
+      );
     }
 
     #endregion
@@ -798,7 +1025,7 @@ namespace mercenary_data_editor
       if (string.IsNullOrEmpty(itemName)) itemName = Items.barbell.ToString();
       var item = new TabItem()
       {
-        Header = weaponDataTabs.Count
+        Header = itemDataTabs.Count
       };
       var wd = new Item(item, itemName)
       {
@@ -859,5 +1086,57 @@ namespace mercenary_data_editor
     }
 
     #endregion
+
+    private void Consumable_Add_OnClick(object sender, RoutedEventArgs e)
+    {
+      CreateConsumableData();
+    }
+
+    private void Consumable_Remove_OnClick(object sender, RoutedEventArgs e)
+    {
+      if (c_consumable_tab.SelectedIndex == -1) return;
+      RemoveConsumableData(c_consumable_tab.SelectedIndex);
+    }
+
+    public void CreateConsumableData
+    (
+      string itemName = null,
+      (ConsumableApplyStatus status, string value)[] data = null
+    )
+    {
+      if (string.IsNullOrEmpty(itemName)) itemName = "";
+      var item = new TabItem
+      {
+        Header = consumableDataTabs.Count
+      };
+      var wd = new Consumable(item, itemName)
+      {
+        Margin = new Thickness(0, 0, 0, 0),
+      };
+
+      if (data != null)
+      {
+        foreach (var x in data)
+          wd.AddItem(x.status.ToString(), x.value);
+      }
+
+      item.Content = wd;
+
+      c_consumable_tab.Items.Add(item);
+      consumableDataTabs.Add(item);
+      item.Focus();
+    }
+
+    private void RemoveConsumableData(int index)
+    {
+      c_consumable_tab.Items.RemoveAt(index);
+      consumableDataTabs.RemoveAt(index);
+    }
+
+    private void ClearConsumableData()
+    {
+      c_consumable_tab.Items.Clear();
+      consumableDataTabs.Clear();
+    }
   }
 }

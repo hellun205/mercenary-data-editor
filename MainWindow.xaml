@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:mercenary_data_editor" xmlns:components="clr-namespace:mercenary_data_editor.Components"
         mc:Ignorable="d"
-        Title="mercenary data editor - v.0.4.0-alpha" Height="600" Width="1000"
+        Title="mercenary data editor - v.0.6.0-alpha" Height="600" Width="1100"
         Loaded="Window_Loaded">
   <Grid>
     <TextBlock Margin="5,5,5,5">경로</TextBlock>
@@ -118,6 +118,13 @@
       <TabItem Header="웨이브 당 증가 확률(무기/아이템)">
         <Grid>
           <components:TierProbabilities x:Name="c_waveProbability" />
+        </Grid>
+      </TabItem>
+      <TabItem Header="소모품">
+        <Grid Background="#FFE5E5E5">
+          <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Click="Consumable_Add_OnClick" Content="Add Item" />
+          <Button VerticalAlignment="Top" HorizontalAlignment="Left" Width="100" Height="20" Margin="105,0,0,0" Click="Consumable_Remove_OnClick" Content="Remove Item" />
+          <TabControl x:Name="c_consumable_tab" Margin="0,25,0,0"></TabControl>
         </Grid>
       </TabItem>
     </TabControl>

@@ -6,13 +6,14 @@
     <RootNamespace>mercenary_data_editor</RootNamespace>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
-		<Version>0.4.0</Version>
-		<AssemblyVersion>0.4.0</AssemblyVersion>
-		<FileVersion>0.4.0</FileVersion>
+		<Version>0.6.0</Version>
+		<AssemblyVersion>0.6.0</AssemblyVersion>
+		<FileVersion>0.6.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+
 
 
 
